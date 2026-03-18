@@ -161,7 +161,7 @@ class LinuxDoSignIn:
                             await page.fill("#login-account-password", self.password)
                             await page.wait_for_timeout(2000)
                             await page.click("#login-button")
-                            await page.wait_for_timeout(10000)
+                            await page.wait_for_timeout(30000)
 
                             await save_page_content_to_file(page, "sign_in_result", self.account_name, prefix="linuxdo")
 
@@ -314,7 +314,6 @@ class LinuxDoSignIn:
 
                     if api_user:
                         print(f"✅ {self.account_name}: OAuth authorization successful")
-
                         # 提取 session cookie，只保留与 provider domain 匹配的
                         restore_cookies = await page.context.cookies()
                         user_cookies = filter_cookies(restore_cookies, self.provider_config.origin)

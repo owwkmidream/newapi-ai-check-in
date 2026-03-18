@@ -88,6 +88,37 @@ jobs:
         restore-keys: |
           storage-state-
 
+    - name: 从 Secret 还原 Linux.do 登录缓存
+      env:
+        LINUXDO_STORAGE_STATES: ${{ secrets.LINUXDO_STORAGE_STATES }}
+      run: |
+        if (-not $env:LINUXDO_STORAGE_STATES) {
+          echo "ℹ️ Secret LINUXDO_STORAGE_STATES 未配置，跳过 storage_state 还原"
+          exit 0
+        }
+
+        New-Item -ItemType Directory -Force -Path "storage-states" | Out-Null
+
+        try {
+          $payload = $env:LINUXDO_STORAGE_STATES | ConvertFrom-Json -AsHashtable
+        } catch {
+          Write-Error "LINUXDO_STORAGE_STATES 不是合法 JSON：$($_.Exception.Message)"
+          exit 1
+        }
+
+        foreach ($entry in $payload.GetEnumerator()) {
+          $name = [System.IO.Path]::GetFileName([string]$entry.Key)
+          if ([string]::IsNullOrWhiteSpace($name) -or -not $name.EndsWith(".json")) {
+            Write-Warning "跳过非法文件名: $($entry.Key)"
+            continue
+          }
+
+          $target = Join-Path "storage-states" $name
+          $content = $entry.Value | ConvertTo-Json -Depth 100
+          Set-Content -Path $target -Value $content -Encoding utf8
+          echo "✅ 已还原 storage_state: $target"
+        }
+
     - name: 恢复帖子ID缓存
       uses: actions/cache/restore@v4
       with:
