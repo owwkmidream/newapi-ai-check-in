@@ -18,6 +18,11 @@ on:
         description: '调试模式 (启用后会保存截图和 HTML 日志)'
         required: false
         type: boolean
+      use_linuxdo_storage_states:
+        description: '是否从 LINUXDO_STORAGE_STATES 恢复 Linux.do 登录缓存'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   checkin:
@@ -95,6 +100,7 @@ jobs:
           storage-state-
 
     - name: 从 Secret 还原 Linux.do 登录缓存
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.use_linuxdo_storage_states || vars.USE_LINUXDO_STORAGE_STATES == 'true' }}
       env:
         LINUXDO_STORAGE_STATES: ${{ secrets.LINUXDO_STORAGE_STATES }}
       run: |
